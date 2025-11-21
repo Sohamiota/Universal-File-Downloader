@@ -1,0 +1,12 @@
+# Universal File Downloader - Links File
+# Supports: WeTransfer and Google Drive
+# Add one URL per line
+# Lines starting with # are comments
+# Empty lines are ignored
+
+# WeTransfer Links
+https://we.tl/t-iIo5lMKuSJ
+
+# Google Drive Links (add your links below)
+# https://drive.google.com/file/d/YOUR_FILE_ID/view
+# https://drive.google.com/open?id=YOUR_FILE_ID
