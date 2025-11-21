@@ -43,20 +43,32 @@ def download_google_drive(url, output_path):
     file_id = match.group(1)
     session = requests.Session()
     download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    response = session.get(download_url, stream=True, verify=False)
+    
+    # First request WITHOUT streaming to check for confirmation page
+    response = session.get(download_url, verify=False)
     
     # Handle large file confirmation
-    if 'confirm=' in response.text or 'download_warning' in response.text:
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        # This is an HTML page (confirmation), not the file
         token_match = re.search(r'confirm=([0-9A-Za-z_]+)', response.text) or \
-                    re.search(r'uuid=([a-f0-9-]+)', response.text)
+                      re.search(r'uuid=([a-f0-9-]+)', response.text)
         if token_match:
             download_url = f"{download_url}&confirm={token_match.group(1)}"
         else:
             download_url = f"{download_url}&confirm=t"
+        # Now get the actual file with streaming
+        response = session.get(download_url, stream=True, verify=False)
+    else:
+        # Small file - download directly with streaming
         response = session.get(download_url, stream=True, verify=False)
     
     if response.status_code != 200:
         raise Exception(f"Download failed: {response.status_code}")
+    
+    # Verify we're actually getting a file, not HTML
+    content_type = response.headers.get('Content-Type', '')
+    if 'text/html' in content_type:
+        raise Exception("Google Drive returned HTML instead of file. File may be private or link expired.")
     
     # Get filename from header
     if os.path.isdir(output_path) or output_path == 'download':
